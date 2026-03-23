@@ -3,6 +3,7 @@ import { View, StyleSheet, FlatList } from 'react-native';
 import { TotalBar } from 'components/ExpenseList/TotalBar';
 import { ExpenseItem } from 'components/ExpenseList/ExpenseItem/ExpenseItem';
 import { Expense } from 'types/expense';
+import LAYOUT from 'constants/layout';
 
 type Props = {
     expenses: Expense[];
@@ -18,6 +19,7 @@ export function ExpenseList({ expenses, totalAmount, headerTitle }: Props) {
             data={expenses}
             renderItem={({ item }) => <ExpenseItem expense={item} />}
             keyExtractor={(item) => item.id}
+            ItemSeparatorComponent={() => <View style={{ height: LAYOUT.gap }} />}
         />
     </View>
 }
@@ -25,6 +27,8 @@ export function ExpenseList({ expenses, totalAmount, headerTitle }: Props) {
 const styles = StyleSheet.create({
     rootContainer: {
         flex: 1,
-        padding: 16,
+        padding: LAYOUT.padding,
+        gap: LAYOUT.gap * 2,
     },
+    
 });

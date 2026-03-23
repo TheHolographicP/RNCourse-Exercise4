@@ -5,4 +5,5 @@ export type Expense = {
     title: string;
     date: Date;
     value: number;
+    
 }
