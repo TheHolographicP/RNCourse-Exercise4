@@ -1,5 +1,5 @@
 import { AddExpenseButton } from 'components/AddExpenseButton';
-import { useContext, useLayoutEffect } from 'react';
+import { useContext, useEffect, useLayoutEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { ExpenseList } from 'components/ExpenseList/ExpenseList';
@@ -10,6 +10,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList, TabParamList } from 'types/nav';
 
 import { ExpenseContext } from 'store/context/expense-context';
+import { apiFetchExpenses } from 'api/expenseAPI';
 
 type Props = CompositeScreenProps<
     BottomTabScreenProps<TabParamList, 'AllExpensesView'>,
@@ -21,6 +22,13 @@ export function AllExpensesView({ navigation }: Props) {
 
     var totalExpenses = expenseContext.expenses.reduce((total, expense) => total + expense.value, 0);
 
+    useEffect(() => {
+        async function fetchExpenseData() {
+            const fetchedExpenses = await apiFetchExpenses();
+            expenseContext.overwriteExpenses(fetchedExpenses);
+        }
+        fetchExpenseData();
+    }, []);
 
     useLayoutEffect(() => {
         navigation.setOptions({
