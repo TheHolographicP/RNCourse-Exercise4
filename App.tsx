@@ -1,6 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStaticNavigation, NavigationContainer } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import Colors from 'constants/colors';
 
@@ -23,12 +24,13 @@ const TabsNavOptions = {
 
 export default function App() { 
 	return <ExpenseContextProvider>
-		<NavigationContainer>
-			<TabsNavigator.Navigator {...TabsNavOptions}>
-				<TabsNavigator.Screen 
-					name='AllExpensesView'
-					component={AllExpensesView}
-					options={{
+		<SafeAreaProvider>
+			<NavigationContainer>
+				<TabsNavigator.Navigator {...TabsNavOptions}>
+					<TabsNavigator.Screen 
+						name='AllExpensesView'
+						component={AllExpensesView}
+						options={{
 						title: 'All Expenses',
 						tabBarIcon: ({ color, size }) => <Ionicons name="list" color={color} size={size} />
 						}}
@@ -41,7 +43,8 @@ export default function App() {
 						tabBarIcon: ({ color, size }) => <Ionicons name="calendar" color={color} size={size} />
 						}}
 					/>
-			</TabsNavigator.Navigator>
-		</NavigationContainer>
+				</TabsNavigator.Navigator>
+			</NavigationContainer>
+		</SafeAreaProvider>
 	</ExpenseContextProvider>
 }
