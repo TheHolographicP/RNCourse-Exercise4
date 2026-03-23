@@ -1,4 +1,4 @@
-import { useContext, useLayoutEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -9,6 +9,8 @@ import { ConfirmationModal } from 'components/ConfirmationModal';
 import Colors from 'constants/colors';
 import { ExpenseContext } from 'store/context/expense-context';
 import type { RootStackParamList } from 'types/nav';
+
+import { apiStoreExpense, apiSaveExpense, apiDeleteExpense } from 'api/expenseAPI';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ExpenseEditor'>;
 
@@ -21,6 +23,7 @@ export function ExpenseEditorView({ navigation, route }: Props) {
         [expenses, route.params?.expenseId]
     );
 
+
     const isEditing = Boolean(editingExpense);
 
     useLayoutEffect(() => {
@@ -29,14 +32,17 @@ export function ExpenseEditorView({ navigation, route }: Props) {
         });
     }, [navigation, isEditing]);
 
-    function handleSubmit(expenseData: { title: string; value: number; date: Date }) {
+    async function handleSubmit(expenseData: { title: string; value: number; date: Date }) {
         if (editingExpense) {
+            await apiSaveExpense(editingExpense.id, expenseData);
             updateExpense(editingExpense.id, expenseData);
         } else {
+            const id = await apiStoreExpense(expenseData);
             addExpense({
-                id: Math.random().toString(),
+                id,
                 ...expenseData,
             });
+            
         }
 
         navigation.goBack();
@@ -48,6 +54,7 @@ export function ExpenseEditorView({ navigation, route }: Props) {
 
     function handleConfirmDelete() {
         if (editingExpense) {
+            apiDeleteExpense(editingExpense.id);
             deleteExpense(editingExpense.id);
         }
         setConfirmDeleteOpen(false);
