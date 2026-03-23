@@ -128,6 +128,9 @@ export function ExpenseEntry({ entryActive, onClose }: Props) {
         buttonContainer: {
             flexDirection: 'row',
             justifyContent: 'space-between',
+            width: '70%',
+            alignSelf: 'center',
+            gap: LAYOUT.gap,
         },
         input: {
             flex: 1,

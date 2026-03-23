@@ -13,6 +13,7 @@ type GenericButtonProps = {
 export function GenericButton({ content, onPress, color = Colors.primary1, textColor = 'black' }: GenericButtonProps) {
     const styles = StyleSheet.create({
         button: {
+            flex:1,
             justifyContent: 'center',
             alignItems: 'center',
             borderRadius: LAYOUT.borderRadius,
