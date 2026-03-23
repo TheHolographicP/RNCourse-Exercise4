@@ -1,12 +1,15 @@
-# Meals App (Navigation Exercise)
+# Expense Tracker App
 
-A simple Expo React Native app built to practice stack navigation with React Navigation.
+A simple Expo React Native app for tracking expenses and viewing spending summaries by time period.
 
-## Screens
+## Features
 
-- **Meal Categories** — grid of meal categories to browse.
-- **Category View** — list of meals belonging to the selected category.
-- **Meal View** — detail view for a single meal, including ingredients and step-by-step instructions.
+![App Demo](appUIRecording.gif)
+
+- **All Expenses** — view all expenses with a running total.
+- **Recent Expenses** — track expenses from the last 7 days.
+- **Add Expense** — create new expenses with title, amount (up to 2 decimal places), and date.
+- **Confirmation Modal** — confirm deletion or critical actions with custom prompts.
 
 ## How to Run
 1. Ensure you have Expo CLI installed (`npm install -g @expo/cli`).
