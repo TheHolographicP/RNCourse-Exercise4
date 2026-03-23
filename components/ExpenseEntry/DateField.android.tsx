@@ -1,34 +1,41 @@
-import { View, Text, StyleSheet, Modal } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { GenericButton } from 'components/GenericButton';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import LAYOUT from 'constants/layout';
 import Colors from 'constants/colors';
 
 type Props = {
     onPickedDate: (date: Date) => void;
+    value?: Date;
+    maximumDate?: Date;
 };
 
-export function DateField({ onPickedDate }: Props) {
-    var [pickedDate, setPickedDate] = useState(new Date());
-    var [labelValue, setLabelValue] = useState('Select Date');
+export function DateField({ onPickedDate, value, maximumDate }: Props) {
+    var [pickedDate, setPickedDate] = useState(value ?? new Date());
     var [datePickerOpen, setDatePickerOpen] = useState(false);
+
+    useEffect(() => {
+        if (value) {
+            setPickedDate(value);
+        }
+    }, [value]);
     
     
     return <View style={styles.container}>
-        <Text style={styles.input}>{labelValue}</Text>
+        <Text style={styles.input}>{pickedDate.toDateString()}</Text>
         <GenericButton content='Pick Date' onPress={() => setDatePickerOpen(true)} color={Colors.primary1} />
         {datePickerOpen && (
             <DateTimePicker
             value={pickedDate}
             mode='date'
             display='default'
+            maximumDate={maximumDate}
             onChange={(event, date) => {
                 if (date) {
                     setPickedDate(date);
-                    setLabelValue(date.toDateString());
                     onPickedDate(date);
                 }
                 setDatePickerOpen(false);

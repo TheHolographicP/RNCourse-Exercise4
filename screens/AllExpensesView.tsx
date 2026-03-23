@@ -42,7 +42,16 @@ export function AllExpensesView({ navigation }: Props) {
             totalAmount={totalExpenses}
             headerTitle="All Expenses"
         />
-        <ExpenseEntry entryActive={expenseEntryOpen} onClose={() => setExpenseEntryOpen(false)} />
+        <ExpenseEntry
+            entryActive={expenseEntryOpen}
+            onClose={() => setExpenseEntryOpen(false)}
+            onSubmit={(expenseData) => {
+                expenseContext.addExpense({
+                    id: Math.random().toString(),
+                    ...expenseData,
+                });
+            }}
+        />
     </View>
 }
 

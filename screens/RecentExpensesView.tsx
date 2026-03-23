@@ -47,7 +47,16 @@ export function RecentExpensesView({ navigation }: Props) {
             totalAmount={totalExpenses}
             headerTitle="Last 7 Days"
         />
-        <ExpenseEntry entryActive={expenseEntryOpen} onClose={() => setExpenseEntryOpen(false)} />
+        <ExpenseEntry
+            entryActive={expenseEntryOpen}
+            onClose={() => setExpenseEntryOpen(false)}
+            onSubmit={(expenseData) => {
+                expenseContext.addExpense({
+                    id: Math.random().toString(),
+                    ...expenseData,
+                });
+            }}
+        />
     </View>
 }
 

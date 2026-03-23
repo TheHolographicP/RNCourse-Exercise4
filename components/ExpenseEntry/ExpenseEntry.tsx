@@ -1,96 +1,128 @@
-import { useContext, useEffect, useState } from 'react';
-import { StyleSheet, View, Text, Modal, TextInput, Pressable } from 'react-native';
+import { useEffect, useState } from 'react';
+import { StyleSheet, View, Text, Modal, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { GenericButton } from 'components/GenericButton';
 
-import { ExpenseContext } from 'store/context/expense-context';
+import { GenericButton } from 'components/GenericButton';
 import { DateField } from 'components/ExpenseEntry/DateField';
 
 import Colors from 'constants/colors';
 import LAYOUT from 'constants/layout';
 
+import type { Expense } from 'types/expense';
+
 type Props = {
     entryActive: boolean;
     onClose: () => void;
+    onSubmit: (expenseData: Omit<Expense, 'id'>) => void;
+    initialValues?: Omit<Expense, 'id'>;
+    formTitle?: string;
+    submitLabel?: string;
 };
 
+type ExpenseEntryErrors = {
+    title?: string;
+    value?: string;
+    date?: string;
+};
 
-export function ExpenseEntry({ entryActive, onClose }: Props) {
-    var [modalOpen, setModalOpen] = useState(entryActive);
+export function ExpenseEntry({
+    entryActive,
+    onClose,
+    onSubmit,
+    initialValues,
+    formTitle = 'Expense Entry',
+    submitLabel = 'Save',
+}: Props) {
     var [expenseName, setExpenseName] = useState('');
-    var [expenseValue, setExpenseValue] = useState(0);
-    var [expenseValueInput, setExpenseValueInput] = useState('0');
+    var [expenseValueInput, setExpenseValueInput] = useState('');
     var [expenseDate, setExpenseDate] = useState(new Date());
+    var [errors, setErrors] = useState<ExpenseEntryErrors>({});
 
-    const expenseContext = useContext(ExpenseContext);
     const insets = useSafeAreaInsets();
 
     useEffect(() => {
-        setModalOpen(entryActive);
-    }, [entryActive]);
+        if (!entryActive) return;
 
+        setExpenseName(initialValues?.title ?? '');
+        setExpenseValueInput(initialValues ? initialValues.value.toString() : '');
+        setExpenseDate(initialValues?.date ?? new Date());
+        setErrors({});
+    }, [entryActive, initialValues]);
 
     function saveExpenseHandler() {
-        expenseContext.addExpense({
-            id: Math.random().toString(),
-            title: expenseName,
-            value: expenseValue,
+        const validationErrors: ExpenseEntryErrors = {};
+        const normalizedTitle = expenseName.trim();
+        const normalizedValueText = expenseValueInput.trim();
+        const parsedValue = Number(normalizedValueText);
+
+        if (!normalizedTitle) {
+            validationErrors.title = 'Title is required.';
+        }
+
+        if (!normalizedValueText) {
+            validationErrors.value = 'Amount is required.';
+        } else if (!/^\d*(?:\.\d{1,2})?$/.test(normalizedValueText) || !Number.isFinite(parsedValue)) {
+            validationErrors.value = 'Amount must be a number with up to two decimal places.';
+        } else if (parsedValue <= 0) {
+            validationErrors.value = 'Amount must be greater than 0.';
+        }
+
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+        if (expenseDate > today) {
+            validationErrors.date = 'Date cannot be in the future.';
+        }
+
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
+            return;
+        }
+
+        onSubmit({
+            title: normalizedTitle,
+            value: parsedValue,
             date: expenseDate,
         });
-        setModalOpen(false);
-        setExpenseName('');
-        setExpenseValue(0);
-        setExpenseValueInput('0');
-        setExpenseDate(new Date());
         onClose();
     }
 
     function cancelExpenseHandler() {
-        setModalOpen(false);
-        setExpenseName('');
-        setExpenseValue(0);
-        setExpenseValueInput('0');
-        setExpenseDate(new Date());
+        setErrors({});
         onClose();
     }
 
-    function handleExpenseValueChange(text: string) {
-        if (text === '') {
-            setExpenseValueInput('');
-            setExpenseValue(0);
-            return;
+    function handleTitleChange(text: string) {
+        setExpenseName(text);
+        if (errors.title) {
+            setErrors(prev => ({ ...prev, title: undefined }));
         }
+    }
 
-        // Allow only non-negative decimals with up to two digits after the dot.
-        if (!/^\d*(?:\.\d{0,2})?$/.test(text)) return;
-
-        const normalizedText = text === '.' ? '0.' : text;
-        setExpenseValueInput(normalizedText);
-
-        const parsed = parseFloat(normalizedText);
-        if (!isNaN(parsed) && parsed >= 0) {
-            setExpenseValue(parsed);
+    function handleExpenseValueChange(text: string) {
+        setExpenseValueInput(text);
+        if (errors.value) {
+            setErrors(prev => ({ ...prev, value: undefined }));
         }
     }
 
     function formatExpenseValueOnBlur() {
-        if (expenseValueInput === '' || expenseValueInput === '.') {
-            setExpenseValueInput('0');
-            setExpenseValue(0);
+        const trimmed = expenseValueInput.trim();
+        if (trimmed === '') {
             return;
         }
 
-        const [integerPart, decimalPart] = expenseValueInput.split('.');
+        const [integerPart, decimalPart] = trimmed.split('.');
         const normalizedInteger = integerPart.replace(/^0+(?=\d)/, '');
         const safeInteger = normalizedInteger === '' ? '0' : normalizedInteger;
-        const formattedValue =
-            decimalPart !== undefined ? `${safeInteger}.${decimalPart}` : safeInteger;
+        const formattedValue = decimalPart !== undefined ? `${safeInteger}.${decimalPart}` : safeInteger;
 
         setExpenseValueInput(formattedValue);
+    }
 
-        const parsed = parseFloat(formattedValue);
-        if (!isNaN(parsed) && parsed >= 0) {
-            setExpenseValue(parsed);
+    function handleDateChange(date: Date) {
+        setExpenseDate(date);
+        if (errors.date) {
+            setErrors(prev => ({ ...prev, date: undefined }));
         }
     }
 
@@ -138,28 +170,34 @@ export function ExpenseEntry({ entryActive, onClose }: Props) {
             borderWidth: 1,
             padding: LAYOUT.padding,
             borderRadius: LAYOUT.borderRadius,
-        }
-
+        },
+        errorText: {
+            color: Colors.primary1,
+            alignSelf: 'flex-end',
+            marginTop: -6,
+            marginBottom: 2,
+        },
     });
 
-    return <Modal visible={modalOpen} animationType='slide' style={styles.modalContainer}>
+    return <Modal visible={entryActive} animationType='slide' style={styles.modalContainer}>
         <View style={styles.safeArea}>
             <Text style={styles.screenTitle}>
-                Expense Entry
+                {formTitle}
             </Text>
             <View style={styles.inputContainer}>
                 <View style={styles.fieldContainer}>
                     <Text style={styles.fieldLabel}>Expense Title:</Text>
-                    <TextInput 
+                    <TextInput
                         placeholder='Expense Name'
                         value={expenseName}
-                        onChangeText={setExpenseName}
+                        onChangeText={handleTitleChange}
                         style={styles.input}
                     />
                 </View>
+                {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
                 <View style={styles.fieldContainer}>
                     <Text style={styles.fieldLabel}>Expense Value:</Text>
-                    <TextInput 
+                    <TextInput
                         placeholder='Expense Value'
                         keyboardType='decimal-pad'
                         value={expenseValueInput}
@@ -168,17 +206,22 @@ export function ExpenseEntry({ entryActive, onClose }: Props) {
                         style={styles.input}
                     />
                 </View>
+                {errors.value && <Text style={styles.errorText}>{errors.value}</Text>}
                 <View style={styles.fieldContainer}>
                     <Text style={styles.fieldLabel}>Expense Date:</Text>
-                    <DateField onPickedDate={setExpenseDate} />
+                    <DateField
+                        onPickedDate={handleDateChange}
+                        value={expenseDate}
+                        maximumDate={new Date()}
+                    />
                 </View>
+                {errors.date && <Text style={styles.errorText}>{errors.date}</Text>}
 
                 <View style={styles.buttonContainer}>
-                    <GenericButton content="Save" onPress={saveExpenseHandler} />
-                    <GenericButton content="Cancel" onPress={cancelExpenseHandler} />
+                    <GenericButton content={submitLabel} onPress={saveExpenseHandler} />
+                    <GenericButton content='Cancel' onPress={cancelExpenseHandler} />
                 </View>
             </View>
         </View>
-    </Modal>
+    </Modal>;
 }
-
