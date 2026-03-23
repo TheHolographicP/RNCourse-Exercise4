@@ -13,6 +13,7 @@ import { ExpenseContext } from 'store/context/expense-context';
 import { apiFetchExpenses } from 'api/expenseAPI';
 
 import { LoadingOverlay } from 'components/LoadingOverlay';
+import { ErrorOverlay } from 'components/ErrorOverlay';
 
 type Props = CompositeScreenProps<
     BottomTabScreenProps<TabParamList, 'AllExpensesView'>,
@@ -25,12 +26,17 @@ export function AllExpensesView({ navigation }: Props) {
     var totalExpenses = expenseContext.expenses.reduce((total, expense) => total + expense.value, 0);
 
     const [loading, setLoading] = useState(true);
-
+    const [error, setError] = useState<string | null>(null);
+    
     useEffect(() => {
         async function fetchExpenseData() {
             setLoading(true);
-            const fetchedExpenses = await apiFetchExpenses();
-            expenseContext.overwriteExpenses(fetchedExpenses);
+            try {
+                const fetchedExpenses = await apiFetchExpenses();
+                expenseContext.overwriteExpenses(fetchedExpenses);
+            } catch (err) {
+                setError('Failed to fetch expenses.');
+            }
             setLoading(false);
         }
         fetchExpenseData();
@@ -51,6 +57,11 @@ export function AllExpensesView({ navigation }: Props) {
     function addExpenseHandler() {
         navigation.navigate('ExpenseEditor');
     };
+
+    if (error) {
+        return <ErrorOverlay message={error} onConfirm={() => setError(null)} />;
+    }
+
 
     if (loading) {
         return <LoadingOverlay />;

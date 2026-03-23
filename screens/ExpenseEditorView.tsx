@@ -12,6 +12,7 @@ import type { RootStackParamList } from 'types/nav';
 
 import { apiStoreExpense, apiSaveExpense, apiDeleteExpense } from 'api/expenseAPI';
 import { LoadingOverlay } from 'components/LoadingOverlay';
+import { ErrorOverlay } from 'components/ErrorOverlay';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ExpenseEditor'>;
 
@@ -19,7 +20,7 @@ export function ExpenseEditorView({ navigation, route }: Props) {
     const { expenses, addExpense, updateExpense, deleteExpense } = useContext(ExpenseContext);
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
     const [loading, setLoading] = useState(false);
-
+    const [error, setError] = useState<string | null>(null);
 
     const editingExpense = useMemo(
         () => expenses.find((expense) => expense.id === route.params?.expenseId),
@@ -38,40 +39,62 @@ export function ExpenseEditorView({ navigation, route }: Props) {
     async function handleSubmit(expenseData: { title: string; value: number; date: Date }) {
         setLoading(true);
         if (editingExpense) {
-            await apiSaveExpense(editingExpense.id, expenseData);
+            try {
+                await apiSaveExpense(editingExpense.id, expenseData);
+                updateExpense(editingExpense.id, expenseData);
+                
+                navigation.goBack();
+            } catch (err) {
+                setError('Failed to save expense.');
+            }
             setLoading(false);
-            updateExpense(editingExpense.id, expenseData);
         } else {
-            const id = await apiStoreExpense(expenseData);
+            try {
+                const id = await apiStoreExpense(expenseData);
+                addExpense({
+                    id,
+                    ...expenseData,
+                });
+                navigation.goBack();
+            } catch (err) {
+                setError('Failed to save expense.');
+            }
             setLoading(false);
-            addExpense({
-                id,
-                ...expenseData,
-            });
-            
         }
 
-        navigation.goBack();
+        
     }
 
     function handleCancel() {
         navigation.goBack();
     }
 
-    function handleConfirmDelete() {
+    async function handleConfirmDelete() {
         if (editingExpense) {
             setLoading(true);
-            apiDeleteExpense(editingExpense.id);
-            deleteExpense(editingExpense.id);
+            try {
+                await apiDeleteExpense(editingExpense.id);
+                deleteExpense(editingExpense.id);
+
+                navigation.goBack();
+            } catch (err) {
+                setError('Failed to delete expense.');
+            }
             setLoading(false);
+            setConfirmDeleteOpen(false);
         }
-        setConfirmDeleteOpen(false);
-        navigation.goBack();
+
+    }
+
+
+    if (error) {
+        return <ErrorOverlay message={error} onConfirm={() => setError(null)} />;
     }
 
     if (loading) {
         return <LoadingOverlay />;
     }
+
 
     return <View style={styles.root}>
         <ConfirmationModal
