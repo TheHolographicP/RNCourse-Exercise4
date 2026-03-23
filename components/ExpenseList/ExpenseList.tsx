@@ -16,7 +16,7 @@ export function ExpenseList({ expenses, totalAmount, headerTitle }: Props) {
         <TotalBar label={headerTitle} amount={totalAmount} />
         <FlatList
             data={expenses}
-            renderItem={({ item }) => <ExpenseItem {...item} />}
+            renderItem={({ item }) => <ExpenseItem expense={item} />}
             keyExtractor={(item) => item.id}
         />
     </View>

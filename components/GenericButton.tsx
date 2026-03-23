@@ -13,14 +13,11 @@ type GenericButtonProps = {
 export function GenericButton({ content, onPress, color = Colors.primary1, textColor = 'black' }: GenericButtonProps) {
     const styles = StyleSheet.create({
         button: {
-            height: 35,
-            width: 35,
             justifyContent: 'center',
             alignItems: 'center',
             borderRadius: LAYOUT.borderRadius,
             padding: LAYOUT.padding,
             backgroundColor: color,
-            flex: 1
         },
     });
 
