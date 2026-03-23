@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 import { StyleSheet, View, Text, Modal, TextInput, Pressable } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context'; 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GenericButton } from 'components/GenericButton';
 
 import { ExpenseContext } from 'store/context/expense-context';
@@ -23,6 +23,7 @@ export function ExpenseEntry({ entryActive, onClose }: Props) {
     var [expenseDate, setExpenseDate] = useState(new Date());
 
     const expenseContext = useContext(ExpenseContext);
+    const insets = useSafeAreaInsets();
 
     useEffect(() => {
         setModalOpen(entryActive);
@@ -93,85 +94,88 @@ export function ExpenseEntry({ entryActive, onClose }: Props) {
         }
     }
 
+    const styles = StyleSheet.create({
+        modalContainer: {
+            backgroundColor: Colors.primary1,
+            gap: LAYOUT.gap,
+            flex: 1,
+        },
+        safeArea: {
+            flex: 1,
+            paddingTop: insets.top + LAYOUT.padding,
+            paddingBottom: insets.bottom + LAYOUT.padding,
+            paddingHorizontal: LAYOUT.padding,
+        },
+        screenTitle: {
+            fontSize: 24,
+            fontWeight: 'bold',
+            marginBottom: 20,
+        },
+        inputContainer: {
+            flex: 1,
+            flexDirection: 'column',
+            gap: LAYOUT.gap,
+        },
+        fieldContainer: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: LAYOUT.gap,
+        },
+        fieldLabel: {
+            minWidth: 100,
+        },
+        buttonContainer: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+        },
+        input: {
+            flex: 1,
+            borderColor: Colors.primary1,
+            borderWidth: 1,
+            padding: LAYOUT.padding,
+            borderRadius: LAYOUT.borderRadius,
+        }
+
+    });
+
     return <Modal visible={modalOpen} animationType='slide' style={styles.modalContainer}>
-        <SafeAreaView style={styles.safeArea}>
+        <View style={styles.safeArea}>
             <Text style={styles.screenTitle}>
                 Expense Entry
             </Text>
             <View style={styles.inputContainer}>
                 <View style={styles.fieldContainer}>
                     <Text style={styles.fieldLabel}>Expense Title:</Text>
-                <TextInput 
-                    placeholder='Expense Name'
-                    value={expenseName}
-                    onChangeText={setExpenseName}
-                    style={styles.input}
-                />
-            </View>
-            <View style={styles.fieldContainer}>
-                <Text style={styles.fieldLabel}>Expense Value:</Text>
-                <TextInput 
-                    placeholder='Expense Value'
-                    keyboardType='decimal-pad'
-                    value={expenseValueInput}
-                    onChangeText={handleExpenseValueChange}
-                    onBlur={formatExpenseValueOnBlur}
-                    style={styles.input}
-                />
-            </View>
-            <View style={styles.fieldContainer}>
-                <Text style={styles.fieldLabel}>Expense Date:</Text>
-                <DateField onPickedDate={setExpenseDate} />
-            </View>
+                    <TextInput 
+                        placeholder='Expense Name'
+                        value={expenseName}
+                        onChangeText={setExpenseName}
+                        style={styles.input}
+                    />
+                </View>
+                <View style={styles.fieldContainer}>
+                    <Text style={styles.fieldLabel}>Expense Value:</Text>
+                    <TextInput 
+                        placeholder='Expense Value'
+                        keyboardType='decimal-pad'
+                        value={expenseValueInput}
+                        onChangeText={handleExpenseValueChange}
+                        onBlur={formatExpenseValueOnBlur}
+                        style={styles.input}
+                    />
+                </View>
+                <View style={styles.fieldContainer}>
+                    <Text style={styles.fieldLabel}>Expense Date:</Text>
+                    <DateField onPickedDate={setExpenseDate} />
+                </View>
 
-            <View style={styles.buttonContainer}>
-                <GenericButton content="Save" onPress={saveExpenseHandler} />
-                <GenericButton content="Cancel" onPress={cancelExpenseHandler} />
+                <View style={styles.buttonContainer}>
+                    <GenericButton content="Save" onPress={saveExpenseHandler} />
+                    <GenericButton content="Cancel" onPress={cancelExpenseHandler} />
+                </View>
             </View>
         </View>
-        </SafeAreaView>
     </Modal>
 }
 
-const styles = StyleSheet.create({
-    modalContainer: {
-        backgroundColor: Colors.primary1,
-        gap: LAYOUT.gap,
-        flex: 1,
-    },
-    safeArea: {
-        flex: 1,
-        padding: LAYOUT.padding,
-    },
-    screenTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-    },
-    inputContainer: {
-        flex: 1,
-        flexDirection: 'column',
-        gap: LAYOUT.gap,
-    },
-    fieldContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: LAYOUT.gap,
-    },
-    fieldLabel: {
-        minWidth: 100,
-    },
-    buttonContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    input: {
-        flex: 1,
-        borderColor: Colors.primary1,
-        borderWidth: 1,
-        padding: LAYOUT.padding,
-        borderRadius: LAYOUT.borderRadius,
-    }
-
-});
