@@ -1,5 +1,5 @@
 import { AddExpenseButton } from 'components/AddExpenseButton';
-import { useContext, useLayoutEffect, useEffect } from 'react';
+import { useContext, useLayoutEffect, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
@@ -9,6 +9,7 @@ import type { RootStackParamList, TabParamList } from 'types/nav';
 import { ExpenseContext } from 'store/context/expense-context';
 
 import { ExpenseList } from 'components/ExpenseList/ExpenseList';
+import { LoadingOverlay } from 'components/LoadingOverlay';
 
 import { apiFetchExpenses } from 'api/expenseAPI';
 
@@ -30,12 +31,15 @@ export function RecentExpensesView({ navigation }: Props) {
     );
 
     var totalExpenses = recentExpenses.reduce((total, expense) => total + expense.value, 0);
-    
+
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         async function fetchExpenseData() {
+            setLoading(true);
             const fetchedExpenses = await apiFetchExpenses();
             expenseContext.overwriteExpenses(fetchedExpenses);
+            setLoading(false);
         }
         fetchExpenseData();
     }, []);
@@ -55,6 +59,10 @@ export function RecentExpensesView({ navigation }: Props) {
     function addExpenseHandler() {
         navigation.navigate('ExpenseEditor');
     };
+
+    if (loading) {
+        return <LoadingOverlay />;
+    }
 
     return <View style={styles.rootScreen}>
         <ExpenseList

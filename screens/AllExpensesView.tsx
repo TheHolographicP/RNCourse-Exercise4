@@ -1,5 +1,5 @@
 import { AddExpenseButton } from 'components/AddExpenseButton';
-import { useContext, useEffect, useLayoutEffect } from 'react';
+import { useContext, useEffect, useLayoutEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { ExpenseList } from 'components/ExpenseList/ExpenseList';
@@ -12,6 +12,8 @@ import type { RootStackParamList, TabParamList } from 'types/nav';
 import { ExpenseContext } from 'store/context/expense-context';
 import { apiFetchExpenses } from 'api/expenseAPI';
 
+import { LoadingOverlay } from 'components/LoadingOverlay';
+
 type Props = CompositeScreenProps<
     BottomTabScreenProps<TabParamList, 'AllExpensesView'>,
     NativeStackScreenProps<RootStackParamList>
@@ -22,10 +24,14 @@ export function AllExpensesView({ navigation }: Props) {
 
     var totalExpenses = expenseContext.expenses.reduce((total, expense) => total + expense.value, 0);
 
+    const [loading, setLoading] = useState(true);
+
     useEffect(() => {
         async function fetchExpenseData() {
+            setLoading(true);
             const fetchedExpenses = await apiFetchExpenses();
             expenseContext.overwriteExpenses(fetchedExpenses);
+            setLoading(false);
         }
         fetchExpenseData();
     }, []);
@@ -45,6 +51,10 @@ export function AllExpensesView({ navigation }: Props) {
     function addExpenseHandler() {
         navigation.navigate('ExpenseEditor');
     };
+
+    if (loading) {
+        return <LoadingOverlay />;
+    }
 
     return <View style={styles.rootScreen}>
         <ExpenseList
