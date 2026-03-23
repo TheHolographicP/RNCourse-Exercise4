@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 import { StyleSheet, View, Text, Modal, TextInput, Pressable } from 'react-native';
-
+import { SafeAreaView } from 'react-native-safe-area-context'; 
 import { GenericButton } from 'components/GenericButton';
 
 import { ExpenseContext } from 'store/context/expense-context';
@@ -19,6 +19,7 @@ export function ExpenseEntry({ entryActive, onClose }: Props) {
     var [modalOpen, setModalOpen] = useState(entryActive);
     var [expenseName, setExpenseName] = useState('');
     var [expenseValue, setExpenseValue] = useState(0);
+    var [expenseValueInput, setExpenseValueInput] = useState('0');
     var [expenseDate, setExpenseDate] = useState(new Date());
 
     const expenseContext = useContext(ExpenseContext);
@@ -29,7 +30,6 @@ export function ExpenseEntry({ entryActive, onClose }: Props) {
 
 
     function saveExpenseHandler() {
-        console.log('Saving expense:', { expenseName, expenseValue, expenseDate });
         expenseContext.addExpense({
             id: Math.random().toString(),
             title: expenseName,
@@ -37,30 +37,70 @@ export function ExpenseEntry({ entryActive, onClose }: Props) {
             date: expenseDate,
         });
         setModalOpen(false);
+        setExpenseName('');
+        setExpenseValue(0);
+        setExpenseValueInput('0');
+        setExpenseDate(new Date());
         onClose();
     }
 
     function cancelExpenseHandler() {
-        console.log('Cancelling expense entry');
         setModalOpen(false);
+        setExpenseName('');
+        setExpenseValue(0);
+        setExpenseValueInput('0');
+        setExpenseDate(new Date());
         onClose();
     }
 
     function handleExpenseValueChange(text: string) {
-        if (/\.\d{3,}/.test(text)) return;
-        const parsed = parseFloat(text);
+        if (text === '') {
+            setExpenseValueInput('');
+            setExpenseValue(0);
+            return;
+        }
+
+        // Allow only non-negative decimals with up to two digits after the dot.
+        if (!/^\d*(?:\.\d{0,2})?$/.test(text)) return;
+
+        const normalizedText = text === '.' ? '0.' : text;
+        setExpenseValueInput(normalizedText);
+
+        const parsed = parseFloat(normalizedText);
+        if (!isNaN(parsed) && parsed >= 0) {
+            setExpenseValue(parsed);
+        }
+    }
+
+    function formatExpenseValueOnBlur() {
+        if (expenseValueInput === '' || expenseValueInput === '.') {
+            setExpenseValueInput('0');
+            setExpenseValue(0);
+            return;
+        }
+
+        const [integerPart, decimalPart] = expenseValueInput.split('.');
+        const normalizedInteger = integerPart.replace(/^0+(?=\d)/, '');
+        const safeInteger = normalizedInteger === '' ? '0' : normalizedInteger;
+        const formattedValue =
+            decimalPart !== undefined ? `${safeInteger}.${decimalPart}` : safeInteger;
+
+        setExpenseValueInput(formattedValue);
+
+        const parsed = parseFloat(formattedValue);
         if (!isNaN(parsed) && parsed >= 0) {
             setExpenseValue(parsed);
         }
     }
 
     return <Modal visible={modalOpen} animationType='slide' style={styles.modalContainer}>
-        <Text style={styles.screenTitle}>
-            Expense Entry
-        </Text>
-        <View style={styles.inputContainer}>
-            <View style={styles.fieldContainer}>
-                <Text style={styles.fieldLabel}>Expense Title:</Text>
+        <SafeAreaView style={styles.safeArea}>
+            <Text style={styles.screenTitle}>
+                Expense Entry
+            </Text>
+            <View style={styles.inputContainer}>
+                <View style={styles.fieldContainer}>
+                    <Text style={styles.fieldLabel}>Expense Title:</Text>
                 <TextInput 
                     placeholder='Expense Name'
                     value={expenseName}
@@ -73,8 +113,9 @@ export function ExpenseEntry({ entryActive, onClose }: Props) {
                 <TextInput 
                     placeholder='Expense Value'
                     keyboardType='decimal-pad'
-                    value={expenseValue.toString()}
+                    value={expenseValueInput}
                     onChangeText={handleExpenseValueChange}
+                    onBlur={formatExpenseValueOnBlur}
                     style={styles.input}
                 />
             </View>
@@ -88,6 +129,7 @@ export function ExpenseEntry({ entryActive, onClose }: Props) {
                 <GenericButton content="Cancel" onPress={cancelExpenseHandler} />
             </View>
         </View>
+        </SafeAreaView>
     </Modal>
 }
 
@@ -96,6 +138,10 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.primary1,
         gap: LAYOUT.gap,
         flex: 1,
+    },
+    safeArea: {
+        flex: 1,
+        padding: LAYOUT.padding,
     },
     screenTitle: {
         fontSize: 24,
