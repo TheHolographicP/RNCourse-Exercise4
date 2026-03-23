@@ -1,5 +1,6 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { createStaticNavigation, NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -7,10 +8,12 @@ import Colors from 'constants/colors';
 
 import { RecentExpensesView } from 'screens/RecentExpensesView';
 import { AllExpensesView } from 'screens/AllExpensesView';
+import { ExpenseEditorView } from 'screens/ExpenseEditorView';
 import { ExpenseContextProvider } from 'store/context/expense-context';
-import { TabParamList } from 'types/nav';
+import { RootStackParamList, TabParamList } from 'types/nav';
 
 const TabsNavigator = createBottomTabNavigator<TabParamList>();
+const RootStack = createNativeStackNavigator<RootStackParamList>();
 
 const TabsNavOptions = {
 	screenOptions: {
@@ -22,28 +25,47 @@ const TabsNavOptions = {
 	},
 }
 
+function TabsLayout() {
+	return <TabsNavigator.Navigator {...TabsNavOptions}>
+		<TabsNavigator.Screen 
+			name='AllExpensesView'
+			component={AllExpensesView}
+			options={{
+			title: 'All Expenses',
+			tabBarIcon: ({ color, size }) => <Ionicons name="list" color={color} size={size} />
+			}}
+		/>
+		<TabsNavigator.Screen 
+			name='RecentExpensesView'
+			component={RecentExpensesView}
+			options={{
+				title: 'Recent Expenses',
+				tabBarIcon: ({ color, size }) => <Ionicons name="calendar" color={color} size={size} />
+			}}
+		/>
+	</TabsNavigator.Navigator>;
+}
+
 export default function App() { 
 	return <ExpenseContextProvider>
 		<SafeAreaProvider>
 			<NavigationContainer>
-				<TabsNavigator.Navigator {...TabsNavOptions}>
-					<TabsNavigator.Screen 
-						name='AllExpensesView'
-						component={AllExpensesView}
+				<RootStack.Navigator>
+					<RootStack.Screen
+						name='Tabs'
+						component={TabsLayout}
+						options={{ headerShown: false }}
+					/>
+					<RootStack.Screen
+						name='ExpenseEditor'
+						component={ExpenseEditorView}
 						options={{
-						title: 'All Expenses',
-						tabBarIcon: ({ color, size }) => <Ionicons name="list" color={color} size={size} />
+							headerBackButtonDisplayMode: 'minimal',
+							headerStyle: { backgroundColor: Colors.primary1 },
+							headerTintColor: 'white',
 						}}
 					/>
-				<TabsNavigator.Screen 
-					name='RecentExpensesView'
-					component={RecentExpensesView}
-					options={{
-						title: 'Recent Expenses',
-						tabBarIcon: ({ color, size }) => <Ionicons name="calendar" color={color} size={size} />
-						}}
-					/>
-				</TabsNavigator.Navigator>
+				</RootStack.Navigator>
 			</NavigationContainer>
 		</SafeAreaProvider>
 	</ExpenseContextProvider>

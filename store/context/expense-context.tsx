@@ -6,12 +6,14 @@ import type { Expense } from "types/expense";
 interface ExpenseContextType {
     expenses: Expense[];
     addExpense: (expense: Expense) => void;
+    updateExpense: (id: string, expenseData: Omit<Expense, 'id'>) => void;
     deleteExpense: (id: string) => void;
 }
 
 export const ExpenseContext = createContext<ExpenseContextType>({
     expenses: [],
     addExpense: (_expense: Expense) => {},
+    updateExpense: (_id: string, _expenseData: Omit<Expense, 'id'>) => {},
     deleteExpense: (_id: string) => {},
 });
 
@@ -22,11 +24,19 @@ export function ExpenseContextProvider({ children }: { children: ReactNode }) {
         setExpenses((prevExpenses) => [...prevExpenses, expense]);
     }
 
+    function updateExpense(id: string, expenseData: Omit<Expense, 'id'>) {
+        setExpenses((prevExpenses) =>
+            prevExpenses.map((expense) =>
+                expense.id === id ? { ...expense, ...expenseData } : expense
+            )
+        );
+    }
+
     function deleteExpense(id: string) {
         setExpenses((prevExpenses) => prevExpenses.filter(expense => expense.id !== id));
     }
 
-    return (<ExpenseContext.Provider value={{ expenses, addExpense, deleteExpense }} >
+    return (<ExpenseContext.Provider value={{ expenses, addExpense, updateExpense, deleteExpense }} >
         {children}
     </ExpenseContext.Provider>)
 }

@@ -1,19 +1,22 @@
 import { AddExpenseButton } from 'components/AddExpenseButton';
-import { useContext, useLayoutEffect, useState } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { useContext, useLayoutEffect } from 'react';
+import { StyleSheet, View } from 'react-native';
 
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import type { TabParamList } from 'types/nav';
+import type { CompositeScreenProps } from '@react-navigation/native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { RootStackParamList, TabParamList } from 'types/nav';
 import { ExpenseContext } from 'store/context/expense-context';
 
 import { ExpenseList } from 'components/ExpenseList/ExpenseList';
-import { ExpenseEntry } from 'components/ExpenseEntry/ExpenseEntry';
 
-type Props = BottomTabScreenProps<TabParamList, 'RecentExpensesView'>;
+type Props = CompositeScreenProps<
+    BottomTabScreenProps<TabParamList, 'RecentExpensesView'>,
+    NativeStackScreenProps<RootStackParamList>
+>;
 
 export function RecentExpensesView({ navigation }: Props) {
     const expenseContext = useContext(ExpenseContext);
-    var [expenseEntryOpen, setExpenseEntryOpen] = useState(false);
 
     const today = new Date();
     const oneWeekAgo = new Date();
@@ -38,7 +41,7 @@ export function RecentExpensesView({ navigation }: Props) {
     }, [navigation]);
     
     function addExpenseHandler() {
-        setExpenseEntryOpen(true);
+        navigation.navigate('ExpenseEditor');
     };
 
     return <View style={styles.rootScreen}>
@@ -46,16 +49,7 @@ export function RecentExpensesView({ navigation }: Props) {
             expenses={recentExpenses}
             totalAmount={totalExpenses}
             headerTitle="Last 7 Days"
-        />
-        <ExpenseEntry
-            entryActive={expenseEntryOpen}
-            onClose={() => setExpenseEntryOpen(false)}
-            onSubmit={(expenseData) => {
-                expenseContext.addExpense({
-                    id: Math.random().toString(),
-                    ...expenseData,
-                });
-            }}
+            onSelectExpense={(expenseId) => navigation.navigate('ExpenseEditor', { expenseId })}
         />
     </View>
 }

@@ -32,7 +32,7 @@ export function GenericButton({ content, onPress, color = Colors.primary1, textC
                     },
                 ]}
             >
-                <Text>{content}</Text>
+                <Text style={{ textAlign: 'center' }}>{content}</Text>
             </Pressable>
         </View>
     );

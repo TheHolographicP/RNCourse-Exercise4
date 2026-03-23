@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, Modal, TextInput } from 'react-native';
+import { StyleSheet, View, Text, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GenericButton } from 'components/GenericButton';
@@ -11,12 +11,12 @@ import LAYOUT from 'constants/layout';
 import type { Expense } from 'types/expense';
 
 type Props = {
-    entryActive: boolean;
     onClose: () => void;
     onSubmit: (expenseData: Omit<Expense, 'id'>) => void;
     initialValues?: Omit<Expense, 'id'>;
-    formTitle?: string;
     submitLabel?: string;
+    deleteLabel?: string;
+    onDelete?: () => void;
 };
 
 type ExpenseEntryErrors = {
@@ -26,12 +26,12 @@ type ExpenseEntryErrors = {
 };
 
 export function ExpenseEntry({
-    entryActive,
     onClose,
     onSubmit,
     initialValues,
-    formTitle = 'Expense Entry',
     submitLabel = 'Save',
+    deleteLabel = 'Delete',
+    onDelete,
 }: Props) {
     var [expenseName, setExpenseName] = useState('');
     var [expenseValueInput, setExpenseValueInput] = useState('');
@@ -41,13 +41,11 @@ export function ExpenseEntry({
     const insets = useSafeAreaInsets();
 
     useEffect(() => {
-        if (!entryActive) return;
-
         setExpenseName(initialValues?.title ?? '');
         setExpenseValueInput(initialValues ? initialValues.value.toString() : '');
         setExpenseDate(initialValues?.date ?? new Date());
         setErrors({});
-    }, [entryActive, initialValues]);
+    }, [initialValues]);
 
     function saveExpenseHandler() {
         const validationErrors: ExpenseEntryErrors = {};
@@ -83,7 +81,6 @@ export function ExpenseEntry({
             value: parsedValue,
             date: expenseDate,
         });
-        onClose();
     }
 
     function cancelExpenseHandler() {
@@ -128,7 +125,7 @@ export function ExpenseEntry({
 
     const styles = StyleSheet.create({
         modalContainer: {
-            backgroundColor: Colors.primary1,
+            backgroundColor: 'white',
             gap: LAYOUT.gap,
             flex: 1,
         },
@@ -137,11 +134,6 @@ export function ExpenseEntry({
             paddingTop: insets.top + LAYOUT.padding,
             paddingBottom: insets.bottom + LAYOUT.padding,
             paddingHorizontal: LAYOUT.padding,
-        },
-        screenTitle: {
-            fontSize: 24,
-            fontWeight: 'bold',
-            marginBottom: 20,
         },
         inputContainer: {
             flex: 1,
@@ -179,11 +171,8 @@ export function ExpenseEntry({
         },
     });
 
-    return <Modal visible={entryActive} animationType='slide' style={styles.modalContainer}>
+    return <View style={styles.modalContainer}>
         <View style={styles.safeArea}>
-            <Text style={styles.screenTitle}>
-                {formTitle}
-            </Text>
             <View style={styles.inputContainer}>
                 <View style={styles.fieldContainer}>
                     <Text style={styles.fieldLabel}>Expense Title:</Text>
@@ -219,9 +208,10 @@ export function ExpenseEntry({
 
                 <View style={styles.buttonContainer}>
                     <GenericButton content={submitLabel} onPress={saveExpenseHandler} />
+                    {onDelete && <GenericButton content={deleteLabel} onPress={onDelete} color={Colors.primary1} textColor='white' />}
                     <GenericButton content='Cancel' onPress={cancelExpenseHandler} />
                 </View>
             </View>
         </View>
-    </Modal>;
+    </View>;
 }

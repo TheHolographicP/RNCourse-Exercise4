@@ -1,49 +1,20 @@
 import { StyleSheet, View, Text, Pressable } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useContext, useState } from 'react';
 
 import LAYOUT from 'constants/layout';
 import Colors from 'constants/colors';
 import { Expense } from 'types/expense';
 
-import { ExpenseContext } from 'store/context/expense-context';
-import { ConfirmationModal } from 'components/ConfirmationModal';
-
 interface ExpenseItemProps {
-    expense: Expense
+    expense: Expense;
+    onPress: () => void;
 }
 
-export function ExpenseItem({ expense }: ExpenseItemProps) {
-    const [cancelDialogueVisible, setCancelDialogueVisible] = useState(false);
+export function ExpenseItem({ expense, onPress }: ExpenseItemProps) {
 
-    const { id, title, date, value } = expense;
-    const { deleteExpense } = useContext(ExpenseContext);
-
-    function onDelete() {
-        setCancelDialogueVisible(true);
-    }
-
-    function onConfirmDelete() {
-        deleteExpense(id);
-        setCancelDialogueVisible(false);
-    }
-
-    function onCancelDelete() {
-        setCancelDialogueVisible(false);
-    }
+    const { title, date, value } = expense;
 
     return <View style={styles.expenseItemRoot}>
-        <ConfirmationModal
-            visible={cancelDialogueVisible}
-            message="Are you sure you want to delete this expense?"
-            confirmLabel="Delete"
-            confirmIcon={<Ionicons name="trash" size={16} color="white" />}
-            cancelIcon={<Ionicons name="close" size={16} color="white" />}
-            cancelLabel="Cancel"
-            onConfirm={onConfirmDelete}
-            onCancel={onCancelDelete}
-        />
-        <Pressable onPress={onDelete} style={styles.expenseContainer}>
+        <Pressable onPress={onPress} style={styles.expenseContainer}>
             <View style={styles.expenseDetailsContainer}>
                 <Text style={styles.expenseTitle}>
                     {title}

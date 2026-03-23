@@ -1,0 +1,88 @@
+import { useContext, useLayoutEffect, useMemo, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+
+import { ExpenseEntry } from 'components/ExpenseEntry/ExpenseEntry';
+import { ConfirmationModal } from 'components/ConfirmationModal';
+
+import Colors from 'constants/colors';
+import { ExpenseContext } from 'store/context/expense-context';
+import type { RootStackParamList } from 'types/nav';
+
+type Props = NativeStackScreenProps<RootStackParamList, 'ExpenseEditor'>;
+
+export function ExpenseEditorView({ navigation, route }: Props) {
+    const { expenses, addExpense, updateExpense, deleteExpense } = useContext(ExpenseContext);
+    const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+
+    const editingExpense = useMemo(
+        () => expenses.find((expense) => expense.id === route.params?.expenseId),
+        [expenses, route.params?.expenseId]
+    );
+
+    const isEditing = Boolean(editingExpense);
+
+    useLayoutEffect(() => {
+        navigation.setOptions({
+            title: isEditing ? 'Edit Expense' : 'Add Expense',
+        });
+    }, [navigation, isEditing]);
+
+    function handleSubmit(expenseData: { title: string; value: number; date: Date }) {
+        if (editingExpense) {
+            updateExpense(editingExpense.id, expenseData);
+        } else {
+            addExpense({
+                id: Math.random().toString(),
+                ...expenseData,
+            });
+        }
+
+        navigation.goBack();
+    }
+
+    function handleCancel() {
+        navigation.goBack();
+    }
+
+    function handleConfirmDelete() {
+        if (editingExpense) {
+            deleteExpense(editingExpense.id);
+        }
+        setConfirmDeleteOpen(false);
+        navigation.goBack();
+    }
+
+    return <View style={styles.root}>
+        <ConfirmationModal
+            visible={confirmDeleteOpen}
+            message='Are you sure you want to delete this expense?'
+            confirmLabel='Delete'
+            confirmIcon={<Ionicons name='trash' size={16} color='white' />}
+            cancelIcon={<Ionicons name='close' size={16} color='white' />}
+            cancelLabel='Cancel'
+            onConfirm={handleConfirmDelete}
+            onCancel={() => setConfirmDeleteOpen(false)}
+        />
+        <ExpenseEntry
+            onSubmit={handleSubmit}
+            onClose={handleCancel}
+            submitLabel={isEditing ? 'Save Changes' : 'Save'}
+            initialValues={editingExpense ? {
+                title: editingExpense.title,
+                value: editingExpense.value,
+                date: editingExpense.date,
+            } : undefined}
+            onDelete={isEditing ? () => setConfirmDeleteOpen(true) : undefined}
+            deleteLabel='Delete'
+        />
+    </View>;
+}
+
+const styles = StyleSheet.create({
+    root: {
+        flex: 1,
+        backgroundColor: 'white',
+    },
+});
