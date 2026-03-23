@@ -11,12 +11,15 @@ import { ExpenseContext } from 'store/context/expense-context';
 import type { RootStackParamList } from 'types/nav';
 
 import { apiStoreExpense, apiSaveExpense, apiDeleteExpense } from 'api/expenseAPI';
+import { LoadingOverlay } from 'components/LoadingOverlay';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ExpenseEditor'>;
 
 export function ExpenseEditorView({ navigation, route }: Props) {
     const { expenses, addExpense, updateExpense, deleteExpense } = useContext(ExpenseContext);
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
+
 
     const editingExpense = useMemo(
         () => expenses.find((expense) => expense.id === route.params?.expenseId),
@@ -33,11 +36,14 @@ export function ExpenseEditorView({ navigation, route }: Props) {
     }, [navigation, isEditing]);
 
     async function handleSubmit(expenseData: { title: string; value: number; date: Date }) {
+        setLoading(true);
         if (editingExpense) {
             await apiSaveExpense(editingExpense.id, expenseData);
+            setLoading(false);
             updateExpense(editingExpense.id, expenseData);
         } else {
             const id = await apiStoreExpense(expenseData);
+            setLoading(false);
             addExpense({
                 id,
                 ...expenseData,
@@ -54,11 +60,17 @@ export function ExpenseEditorView({ navigation, route }: Props) {
 
     function handleConfirmDelete() {
         if (editingExpense) {
+            setLoading(true);
             apiDeleteExpense(editingExpense.id);
             deleteExpense(editingExpense.id);
+            setLoading(false);
         }
         setConfirmDeleteOpen(false);
         navigation.goBack();
+    }
+
+    if (loading) {
+        return <LoadingOverlay />;
     }
 
     return <View style={styles.root}>
